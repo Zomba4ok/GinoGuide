@@ -16,10 +16,6 @@
 ```
 pip install gino
 ```
-Так же, по скольку Gino не поддерживает механизма миграция из коробки, необходимо использовать другие библиотеки для перенесения моделей в БД. Например [alembic](https://pypi.org/project/alembic/).
-```
-pip install alembic
-```
 **Не забывайте, что Gino будет корректно работать только для асинхронных web framework'ов, как, например, [Sanic](https://github.com/huge-success/sanic) или [Aiohttp](https://github.com/aio-libs/aiohttp)**
 
 # Создание схемы БД
