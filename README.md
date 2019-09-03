@@ -101,7 +101,7 @@ class User(db.Model):
 ```
 pip install alembic
 ```
-Наъодясь в папке проекта выполнить в консоли bash:
+Находясь в папке проекта выполнить в консоли bash:
 ```
 alembic init alembic
 ```
@@ -109,4 +109,22 @@ alembic init alembic
 ```
 sqlalchemy.url = postgres://{{username}}:{{password}}@{{address}}/{{db_name}}
 ```
+Далее перейти в появившуся после инициализации папку `alembic` в ней открыть файл `env.py` и добавить следующие строки:
+```
+from {{my_prject_dir}} import {{metadata}}
 
+target_metadata = db
+```
+Здесь мы импортируем metadata (это будет объект Gino или SQLAlchemy в зависимости от способа задания схемы БД) и присваиваем его `target_metadata`.
+**Обратите внимание, что переменная `target_metadata` объявлена в файле изначально, вам нужно только изменить ее значение.
+ 
+ Теперь для применения миграций вам достаточно ввести две команды.
+ 
+ Для автогенерации миграций на основе созданных моделей:
+ ```
+ alembic revision -m "Migration message" --autogenerate --head head
+ ```
+ И для их применения:
+ ```
+ alembic upgrade head
+ ```
