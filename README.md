@@ -27,6 +27,7 @@ pip install alembic
 Существует 3 способа задания схемы БД. 
 
 ***Gino ORM***
+
 Это классический способ задания схемы БД для многих web framework'ов.
 
 В первую очередь необходмо создать объект Gino (обычно, его называют **db**):
@@ -35,26 +36,27 @@ db = Gino()
 ```
 Далее создается непосредственно класс модели (в родителях класса указывается db.Model либо другой класс Gino модели):
 ```
-class Car(db.Model):
-    __tablename__ = 'cars'
+class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
-    car_brand = db.Column(db.Unicode())
-    body_type = db.Column(db.String())
+    first_name = db.Column(db.String())
+    last_name = db.Column(db.String())
 ```
 Переменная `__tablename__`  определяет название соответствующей таблицы в БД.
 Типы данных `db.BigInteger()`, `db.Unicode()`, полностью аналогичны [Generic types](https://docs.sqlalchemy.org/en/13/core/type_basics.html) SQLAlchemy
 
 ***Gino engine***
+
 Удобен, когда необходимо добавить в уже написанный на SQLAlchemy код поддержку асинхронной работы.
 ```
 metadata = MetaData()
 
-owners = Table(
-    'owners', metadata,
+users = Table(
+    'users', metadata,
 
     Column('id', Integer, primary_key=True),
-    Column('first name', String),
-    Column('last name', String)
+    Column('first_name', String),
+    Column('last_name', String)
 )
 ```
 Помимо сторонних библиотек ([alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы также необходимо объявить `engine`. Это действие будет рассмотрено ниже:
@@ -69,7 +71,28 @@ async def main():
 Синтаксис и принципы работы взят из [SQLAlchemy core](https://docs.sqlalchemy.org/en/13/core/metadata.html).
 
 ***Gino core***
+
 Как и в варианте **Gino ORM** необходимо создать объект Gino:
 ```
 db = Gino()
+```
+
+Дальнейшие действия аналогичны **Gino engine** за исключением используемого ядра (Gino core вместо SQLAlchemy core).
+```
+from gino import Gino
+
+db = Gino()
+
+users = db.Table(
+    'users', db,
+
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('first_name', db.String),
+    db.Column('last_name', db.String),
+)
+```
+Миграции, как и в предыдущем случае можно провести с помощью [alembic](https://pypi.org/project/alembic/) или встроенной функции `create_all()`:
+```
+async with db.with_bind('postgresql://localhost/gino'):
+    await db.gino.create_all()
 ```
