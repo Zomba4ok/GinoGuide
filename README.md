@@ -22,25 +22,6 @@ pip install gino
 
 Существует 3 способа задания схемы БД. 
 
-***Gino ORM***
-
-Это классический способ задания схемы БД для многих web framework'ов.
-
-В первую очередь необходмо создать объект Gino (обычно, его называют **db**):
-```
-db = Gino()
-```
-Далее создается непосредственно класс модели (в родителях класса указывается db.Model либо другой класс Gino модели):
-```
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
-    first_name = db.Column(db.String())
-    last_name = db.Column(db.String())
-```
-Переменная `__tablename__`  определяет название соответствующей таблицы в БД.
-Типы данных `db.BigInteger()`, `db.Unicode()`, полностью аналогичны [Generic types](https://docs.sqlalchemy.org/en/13/core/type_basics.html) SQLAlchemy
-
 ***Gino engine***
 
 Удобен, когда необходимо добавить в уже написанный на SQLAlchemy код поддержку асинхронной работы.
@@ -55,7 +36,7 @@ users = Table(
     Column('last_name', String)
 )
 ```
-Помимо сторонних библиотек ([alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы также необходимо объявить `engine`. Это действие будет рассмотрено ниже:
+Помимо сторонних библиотек (например, [alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы также необходимо объявить `engine`. Это действие будет рассмотрено ниже:
 ```
 import gino
 from gino.schema import GinoSchemaVisitor
@@ -68,11 +49,10 @@ async def main():
 
 ***Gino core***
 
-Как и в варианте **Gino ORM** необходимо создать объект Gino:
+В первую очередь необходимо создать объект Gino (обычно, его называют **db**):
 ```
 db = Gino()
 ```
-
 Дальнейшие действия аналогичны **Gino engine** за исключением используемого ядра (Gino core вместо SQLAlchemy core).
 ```
 from gino import Gino
@@ -92,3 +72,41 @@ users = db.Table(
 async with db.with_bind('postgresql://localhost/gino'):
     await db.gino.create_all()
 ```
+***Gino ORM***
+
+Это классический способ задания схемы БД для многих web framework'ов.
+
+Как и в предыдущем случае создаем объект Gino:
+```
+db = Gino()
+```
+Далее создается непосредственно класс модели (в родителях класса указывается db.Model либо другой класс Gino модели):
+```
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
+    first_name = db.Column(db.String())
+    last_name = db.Column(db.String())
+```
+Переменная `__tablename__`  определяет название соответствующей таблицы в БД.
+Типы данных `db.BigInteger()`, `db.Unicode()`, полностью аналогичны [Generic types](https://docs.sqlalchemy.org/en/13/core/type_basics.html) SQLAlchemy
+
+Все доступные способы миграции аналогичны таковым в **Gino ore**.
+
+# Миграции с alembic
+
+Библиотека [alembic](https://pypi.org/project/alembic/) позволяет настроить применение миграция к базе по команде из консоли. Для этого необходимо выполнить следующие шаги?
+
+Установить библиотеку.
+```
+pip install alembic
+```
+Наъодясь в папке проекта выполнить в консоли bash:
+```
+alembic init alembic
+```
+Появившийся файл `alembic.ini` открыть любым текстовым редактором в строке `sqlachemy.url = ` ввести адрес сервера БД:
+```
+sqlalchemy.url = postgres://{{username}}:{{password}}@{{address}}/{{db_name}}
+```
+
