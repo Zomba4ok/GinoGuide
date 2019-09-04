@@ -22,6 +22,8 @@ pip install gino
 
 Удобен, когда необходимо добавить в уже написанный на SQLAlchemy код поддержку асинхронной работы.
 ```
+from sqlalchemy import Table, Column, Integer, String, MetaData
+
 metadata = MetaData()
 
 users = Table(
