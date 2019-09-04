@@ -116,6 +116,7 @@ from {{my_prject_dir}} import {{metadata}}
 target_metadata = db
 ```
 Здесь мы импортируем metadata (это будет объект Gino или metadata SQLAlchemy в зависимости от способа задания схемы БД) и присваиваем его `target_metadata`.
+
 **Обратите внимание, что переменная `target_metadata` объявлена в файле изначально, вам нужно только изменить ее значение.
  
  Теперь для применения миграций вам достаточно ввести две команды.
@@ -134,6 +135,7 @@ target_metadata = db
 Как и в случае с схемами БД есьт несколько способов объявления engine: с помощью функции ядра SQLAlchemy `create_all()` и с помощью аналогичной функции ядра Gino.
 
 ***SQLAlchemy core***
+
 В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `stratagy = 'gino'`.
 ```
 import gino
@@ -144,6 +146,7 @@ async def main():
 **Обратите внимания, что без `import gino` функция работать не будет**
 
 ***Gino core***
+
 Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `stratagy = 'gino'.
 ```
 import gino
@@ -177,9 +180,6 @@ async def get_car(request):
     engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
     async with engine.acquire() as conn:
         cars = await conn.all('SELECT * FROM cars')
-    car_list = ''
-    for car in cars:
-        car_list += ('<p>' + str(car) + '</p>')
     return html(cars)
 ```
 Результат выполнения данного метода показан на рисунке ниже.
@@ -190,7 +190,7 @@ async def get_car(request):
 
 После замены sql запроса `SELECT` в коде приведенной выше функции на `INSERT INTO cars (car_brand, body_type, owner) VALUES(\'skoda\', \'sedan\', 1)`,  мы полчили следующий вывод:
 
-![2](https://user-images.githubusercontent.com/49648818/64254256-b04cad00-cf27-11e9-93bd-5b109125bf8a.jpg)
+![2](https://user-images.githubusercontent.com/49648818/64258071-37e9ea00-cf2f-11e9-8d59-33a25ffa4359.jpg)
 
 **first()**
 
@@ -205,13 +205,10 @@ async def get_car(request):
     # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
     async with engine.acquire() as conn:
         cars = await conn.first('SELECT * FROM cars')
-    car_list = ''
-    for car in cars:
-        car_list += ('<p>' + str(car) + '</p>')
     return html(cars)
 ```
 
-![3](https://user-images.githubusercontent.com/49648818/64255036-3b7a7280-cf29-11e9-9e81-ff5bef2a36dc.jpg)
+![3](https://user-images.githubusercontent.com/49648818/64258078-3a4c4400-cf2f-11e9-8dcd-da89e3fc98c6.jpg)
 
 **scalar()**
 
@@ -220,4 +217,22 @@ async def get_car(request):
 Этот метод удобен для выполнения, например, функций MIN(), MAX(), COUNT() и др.
 
 **status()**
+
+Метод `status()` выполняет SQL запрос и возвращает кортеж из двух элементов: статуса выполнения запроса и результата его выполнения.
+
+```
+@app.route('/')
+async def get_car(request):
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')  # engine creating
+    # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
+    async with engine.acquire() as conn:
+        cars = await conn.status('SELECT * FROM cars WHERE owner=1')
+    return html(cars)
+
+```
+
+![4](https://user-images.githubusercontent.com/49648818/64258497-0c1b3400-cf30-11e9-8d1a-92b4ae9e4398.jpg)
+
+
+
 
