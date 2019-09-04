@@ -45,7 +45,7 @@ async def main():
     engine = await gino.create_engine('postgresql://...')
     await GinoSchemaVisitor(metadata).create_all(engine)
 ```
-Синтаксис и принципы работы взят из [SQLAlchemy core](https://docs.sqlalchemy.org/en/13/core/metadata.html).
+Синтаксис и принципы работы взяты из [SQLAlchemy core](https://docs.sqlalchemy.org/en/13/core/metadata.html).
 
 ***Gino core***
 
