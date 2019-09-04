@@ -22,7 +22,7 @@ pip install gino
 
 Существует 3 способа задания схемы БД. 
 
-***Gino engine***
+### Gino engine
 
 Удобен, когда необходимо добавить в уже написанный на SQLAlchemy код поддержку асинхронной работы.
 ```
@@ -47,7 +47,7 @@ async def main():
 ```
 Синтаксис и принципы работы взяты из [SQLAlchemy core](https://docs.sqlalchemy.org/en/13/core/metadata.html).
 
-***Gino core***
+### Gino core
 
 В первую очередь необходимо создать объект Gino (обычно, его называют **db**):
 ```
@@ -72,7 +72,7 @@ users = db.Table(
 async with db.with_bind('postgresql://localhost/gino'):
     await db.gino.create_all()
 ```
-***Gino ORM***
+### Gino ORM
 
 Это классический способ задания схемы БД для многих web framework'ов.
 
@@ -134,7 +134,7 @@ target_metadata = db
 
 Как и в случае с схемами БД есьт несколько способов объявления engine: с помощью функции ядра SQLAlchemy `create_all()` и с помощью аналогичной функции ядра Gino.
 
-***SQLAlchemy core***
+### SQLAlchemy core
 
 В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `stratagy = 'gino'`.
 ```
@@ -145,7 +145,7 @@ async def main():
 ```
 **Обратите внимания, что без `import gino` функция работать не будет**
 
-***Gino core***
+### Gino core
 
 Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `stratagy = 'gino'.
 ```
@@ -171,7 +171,7 @@ await connection.release()
 
 Как только подключение создано, можно приступать непосредственно к написанию SQL запросов. В Gino существует 4 разных методы для их (запросов) выполнения: `all()`, `first()`, `scalar()`, `status()`. Все они работают одинаково, но отличаются возвращаемыми значениями. 
 
-**all()**
+### all()
 
 Метод `all()` всегда возвращает список. Он может быть пустым, если у запроса нет результата, но это все равно будет список.
 ```
@@ -192,16 +192,15 @@ async def get_car(request):
 
 ![2](https://user-images.githubusercontent.com/49648818/64258071-37e9ea00-cf2f-11e9-8d59-33a25ffa4359.jpg)
 
-**first()**
+### first()
 
 `first()` возвращает первый результат запроса или none, если результата нет. 
 
 Выполнение запроса `SELECT * FROM table_name` приведет к выводу только первой строки, как в примере ниже.
-
 ```
 @app.route('/')
 async def get_car(request):
-    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')  # engine creating
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres') 
     # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
     async with engine.acquire() as conn:
         cars = await conn.first('SELECT * FROM cars')
@@ -210,20 +209,20 @@ async def get_car(request):
 
 ![3](https://user-images.githubusercontent.com/49648818/64258078-3a4c4400-cf2f-11e9-8dcd-da89e3fc98c6.jpg)
 
-**scalar()**
+### scalar()
 
 Этот метод также как и first возвращает первый результат или none, если результат нет. Но, в отличие от`first()` этот метод возвращает только скалярные величины (к примеру, вместо строки результата она вернет только ее primary key).
 
 Этот метод удобен для выполнения, например, функций MIN(), MAX(), COUNT() и др.
 
-**status()**
+### status()
 
 Метод `status()` выполняет SQL запрос и возвращает кортеж из двух элементов: статуса выполнения запроса и результата его выполнения.
 
 ```
 @app.route('/')
 async def get_car(request):
-    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')  # engine creating
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres') 
     # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
     async with engine.acquire() as conn:
         cars = await conn.status('SELECT * FROM cars WHERE owner=1')
@@ -233,6 +232,8 @@ async def get_car(request):
 
 ![4](https://user-images.githubusercontent.com/49648818/64258497-0c1b3400-cf30-11e9-8d1a-92b4ae9e4398.jpg)
 
+
+# Транзакции
 
 
 
