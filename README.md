@@ -24,8 +24,8 @@ pip install gino
 ```
 from sqlalchemy import Table, Column, Integer, String, MetaData
 
-metadata = MetaData()
 
+metadata = MetaData()
 
 users = Table(
     'users', metadata,
