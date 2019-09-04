@@ -135,18 +135,18 @@ target_metadata = db
 
 ### SQLAlchemy core
 
-В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `stratagy = 'gino'`.
+В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `strategy = 'gino'`.
 ```
 import gino
 
 async def main():
     engine = await gino.create_engine('postgres://{{username}}:{{password}}@{{address}}/{{db_name}}')
 ```
-**Обратите внимания, что без `import gino` функция работать не будет**
+**Обратите внимание, что без `import gino` функция работать не будет**
 
 ### Gino core
 
-Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `stratagy = 'gino'.
+Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `strategy = 'gino'.
 ```
 import gino
 
