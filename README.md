@@ -201,7 +201,6 @@ async def get_car(request):
 @app.route('/')
 async def get_car(request):
     engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres') 
-    # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
     async with engine.acquire() as conn:
         cars = await conn.first('SELECT * FROM cars')
     return html(cars)
@@ -223,7 +222,6 @@ async def get_car(request):
 @app.route('/')
 async def get_car(request):
     engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres') 
-    # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
     async with engine.acquire() as conn:
         cars = await conn.status('SELECT * FROM cars WHERE owner=1')
     return html(cars)
@@ -236,4 +234,25 @@ async def get_car(request):
 # Транзакции
 
 
+Никогда невозможно точно сказать, сколько времени займет await, при чем слишком долгое удержание транзакций может привести к серьезным сбоям в работе приложения. Gino решает эту проблему, путем обеспечения явного управления транзакциями.
+
+Обычно, транзакция в Gino инициализируется следующим образом:
+```
+async with connection.transaction() as tx:
+    await connection.all( ...
+```
+Но иногда транзакция также инициализируется на экземпляре Gino или GinoEngine.
+
+Для управления транзакциями Gino также предоставляет два метода: `tx.raise_commit()` и `tx.raise_rollback()`. Закрытие происходит автоматически при выходе из блока.
+
+При необходимости все транзакции в Gino можно контролировать вручную:
+```
+tx = await connection.transaction()
+try:
+    await db.status(...
+    await tx.commit()
+except Exception:
+    await tx.rollback()
+    raise
+```
 
