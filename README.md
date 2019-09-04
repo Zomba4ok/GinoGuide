@@ -1,10 +1,10 @@
 # Введение 
 
-Согласно введению, в официальном git репозитории Gino: 
+Gino - легковесный асинхронный ORM построенный на ядре SQLAlchemy для библиотеки Python asyncio.
 
-*GINO - GINO Is Not ORM - is a lightweight asynchronous ORM built on top of SQLAlchemy core for Python asyncio. Now (early 2018) GINO supports only one dialect asyncpg.*
+На данный момент Gino поддерживает только один диалект - asyncpg.
 
-Говоря простым языком, Gino позволяет писать и выполнять низкоуровыневые SQL запросы из API в БД асинхронно. 
+Gino позволяет писать и выполнять низкоуровыневые SQL запросы из API в БД асинхронно. 
 
 Создатели библиотеки так же отмечают, что Gino не является ORM. 
 
@@ -168,7 +168,7 @@ await connection.release()
 
 Как только подключение создано, можно приступать непосредственно к написанию SQL запросов. В Gino существует 4 разных методы для их (запросов) выполнения: `all()`, `first()`, `scalar()`, `status()`. Все они работают одинаково, но отличаются возвращаемыми значениями. 
 
-***all()***
+**all()**
 
 Метод `all()` всегда возвращает список. Он может быть пустым, если у запроса нет результата, но это все равно будет список.
 ```
@@ -182,3 +182,42 @@ async def get_car(request):
         car_list += ('<p>' + str(car) + '</p>')
     return html(cars)
 ```
+Результат выполнения данного метода показан на рисунке ниже.
+
+![1](https://user-images.githubusercontent.com/49648818/64254255-b04cad00-cf27-11e9-9ee1-349d6e9e2b27.jpg)
+
+В случае, когда запрос не возвращает ничего (например `ISNERT`), all() возвращает пустой список. 
+
+После замены sql запроса `SELECT` в коде приведенной выше функции на `INSERT INTO cars (car_brand, body_type, owner) VALUES(\'skoda\', \'sedan\', 1)`,  мы полчили следующий вывод:
+
+![2](https://user-images.githubusercontent.com/49648818/64254256-b04cad00-cf27-11e9-93bd-5b109125bf8a.jpg)
+
+**first()**
+
+`first()` возвращает первый результат запроса или none, если результата нет. 
+
+Выполнение запроса `SELECT * FROM table_name` приведет к выводу только первой строки, как в примере ниже.
+
+```
+@app.route('/')
+async def get_car(request):
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')  # engine creating
+    # gino_engine = await sqlalchemy.create_engine('postgres://postgres:admin@localhost/postgres', strategy='gino')
+    async with engine.acquire() as conn:
+        cars = await conn.first('SELECT * FROM cars')
+    car_list = ''
+    for car in cars:
+        car_list += ('<p>' + str(car) + '</p>')
+    return html(cars)
+```
+
+![3](https://user-images.githubusercontent.com/49648818/64255036-3b7a7280-cf29-11e9-9e81-ff5bef2a36dc.jpg)
+
+**scalar()**
+
+Этот метод также как и first возвращает первый результат или none, если результат нет. Но, в отличие от`first()` этот метод возвращает только скалярные величины (к примеру, вместо строки результата она вернет только ее primary key).
+
+Этот метод удобен для выполнения, например, функций MIN(), MAX(), COUNT() и др.
+
+**status()**
+
