@@ -36,7 +36,7 @@ users = Table(
     Column('last_name', String)
 )
 ```
-Помимо сторонних библиотек (например, [alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы также необходимо объявить `engine`. Это действие будет рассмотрено ниже:
+Помимо сторонних библиотек (например, [alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы также необходимо объявить `engine`. Это действие будет рассмотрено ниже в пункте **Создание engine**.
 ```
 import gino
 from gino.schema import GinoSchemaVisitor
