@@ -128,3 +128,57 @@ target_metadata = db
  ```
  alembic upgrade head
  ```
+
+# Создание engine
+
+Как и в случае с схемами БД есьт несколько способов объявления engine: с помощью функции ядра SQLAlchemy `create_all()` и с помощью аналогичной функции ядра Gino.
+
+***SQLAlchemy core***
+В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `stratagy = 'gino'`.
+```
+import gino
+
+async def main():
+    engine = await gino.create_engine('postgres://{{username}}:{{password}}@{{address}}/{{db_name}}')
+```
+**Обратите внимания, что без `import gino` функция работать не будет**
+
+***Gino core***
+Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `stratagy = 'gino'.
+```
+import gino
+
+async def main():
+    engine = await gino.create_engine('postgres://{{username}}:{{password}}@{{address}}/{{db_name}}')
+```
+
+# Connections
+
+Для создания подключения в gino используется метод `engine.acquire()`:
+```
+connection = await engine.acquire()
+```
+После выполнения всех операция соединение необходимо закрывать:
+```
+await connection.release()
+```
+Функция `acquire` также способна принимать несколько keyword аргументов (reuse, lazy и reusable).
+
+# SQL запросы
+
+Как только подключение создано, можно приступать непосредственно к написанию SQL запросов. В Gino существует 4 разных методы для их (запросов) выполнения: `all()`, `first()`, `scalar()`, `status()`. Все они работают одинаково, но отличаются возвращаемыми значениями. 
+
+***all()***
+
+Метод `all()` всегда возвращает список. Он может быть пустым, если у запроса нет результата, но это все равно будет список.
+```
+@app.route('/')
+async def get_car(request):
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
+    async with engine.acquire() as conn:
+        cars = await conn.all('SELECT * FROM cars')
+    car_list = ''
+    for car in cars:
+        car_list += ('<p>' + str(car) + '</p>')
+    return html(cars)
+```
