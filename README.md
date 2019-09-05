@@ -129,24 +129,9 @@ target_metadata = db
  alembic upgrade head
  ```
 
-# Создание engine
+# Engine
 
-Как и в случае со схемами БД есть несколько способов объявления engine: с помощью функции ядра SQLAlchemy `create_all()` и с помощью аналогичной функции ядра Gino.
-
-### SQLAlchemy core
-
-В данном случае engine объявляется также, как и для SQLalchemy, но с параметром `strategy = 'gino'`.
-```
-import gino
-
-async def main():
-    engine = await gino.create_engine('postgres://{{username}}:{{password}}@{{address}}/{{db_name}}')
-```
-**Обратите внимание, что без `import gino` функция работать не будет**
-
-### Gino core
-
-Функция `gino.create_engine()` ничем не отличается от `sqlalchemy.create_engine()`,за исключением установленного по умолчанию параметра `strategy = 'gino'.
+ля создания **engine** Gino предоставляет метод `gino.create_engine()`. Он полностью повторяет поведение аналогичного метода в SQLAchemy за исключением установленного по умолчанию параметра `strategy = 'gino'.
 ```
 import gino
 
@@ -255,3 +240,75 @@ except Exception:
     raise
 ```
 
+# Загрузчики
+
+### Model loader
+
+Загрузчик **Model loader** позволяет получать строки базы данных в виде объектов, а не списков, как в случае с прямыми запросами.
+```
+@app.route('/')
+async def get_car(request):
+    query = db.select([Car])
+    cars = await query.gino.all()
+    return html(cars)
+```
+Результатом выполнения данного когда станет список кортежей - строк из БД.
+
+![5](https://user-images.githubusercontent.com/49648818/64342034-57961680-cff2-11e9-8b64-1059f69b0082.jpg)
+
+Теперь установим в запросе загрузку данных с помощью **Model loader**:
+```
+from gino.loader import ModelLoader
+
+class Car(db.Model):
+#...
+
+@app.route('/')
+async def get_car(request):
+    # engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
+    # async with engine.acquire() as conn:
+    query = db.select([Car])
+    query = query.execution_options(loader=Car)
+    cars = await query.gino.all()
+    return html(cars)
+```
+И снова выполним метод:
+
+![6](https://user-images.githubusercontent.com/49648818/64342317-ec990f80-cff2-11e9-97c8-b2e82ee8d262.png)
+
+Использование model_loader не ускоряет работы API, но делает код более понятным и удобным, за счет обращения к данным через свойства объектов.
+
+### Создание загрузчиков
+
+**Model loader** далеко не единственный загрузчик, предоставляемый Gino. Существую и другие загрузчики изменяющие вывод строк БД. Они подключаются следующим образом:
+```
+from gino.loader import ColumnLoader
+
+query = db.select([User]).execution_options(loader=ColumnLoader(User))
+```
+Под капотом все загрузички являются процессрами строк. При необходимости можно настроить и свой собственный загрузчик:
+```
+@app.route('/')
+async def get_car(request):
+    # engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
+    # async with engine.acquire() as conn:
+    query = db.select([Car]).gino.load(
+        (
+            Car.id,
+            Car,
+            lambda row, ctx: len(row)
+        )
+    )
+    cars = await query.first()
+    return html(cars)
+```
+
+![7](https://user-images.githubusercontent.com/49648818/64349342-7058f900-cfff-11e9-91e1-2449e625ca30.png)
+
+### Many-To-One relationship
+
+Gino не поддерживает автоматического свзяывания таблиц, вместо этого разработчику предлагается использовать загрузчики для ручного управления связями таблиц.
+
+
+***P.S.
+Как говорилось ранее, Gino написано на основе SQLAlchemy и большУю часть функционала наследует из данной ORM. Не забывайте об этом при работе с Gino***
