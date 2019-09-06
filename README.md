@@ -308,6 +308,33 @@ async def get_car(request):
 ### Many-To-One relationship
 
 Gino не поддерживает автоматического свзяывания таблиц, вместо этого разработчику предлагается использовать загрузчики для ручного управления связями таблиц.
+```
+@app.route('/')
+    owners = []
+    async with db.transaction():
+        async for car in Car.load(parent=User).gino.iterate():
+            owners.append(car.parent)
+    return html(owners)
+
+```
+Результатом выполнения приведенного выше метода будет список объектов класса User, указанных в классе Car c помощью Foreign Key.
+
+![image](https://user-images.githubusercontent.com/49648818/64427014-cdfd4c00-d0b8-11e9-8061-922c81011caf.png)
+
+Загрузчик load добавляет объект родительского класса в объект дочернего перед тем, как вернуть его. Это позволяет обращаться к родителю объекта и позже, например так:
+```
+@app.route('/')
+async def get_car(request):
+    cars = []
+    async with db.transaction():
+        async for car in Car.load(parent=User).gino.iterate():
+            cars.append(car)
+    return html(cars[0].parent)
+```
+
+![image](https://user-images.githubusercontent.com/49648818/64427000-c2aa2080-d0b8-11e9-9d4c-bdea9a0d04c5.png)
+
+# Примеры работы с Gino
 
 
 ***P.S.
