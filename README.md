@@ -21,6 +21,8 @@ pip install gino
 ### Gino engine
 
 Удобен, когда необходимо добавить в уже написанный на SQLAlchemy код поддержку асинхронной работы.
+
+Здесь работа непосредственно с Gino начинаесят уже после объявления схемы БД - в момент создания `Gino engine` и `Gino connection`.
 ```
 from sqlalchemy import Table, Column, Integer, String, MetaData
 
@@ -35,7 +37,7 @@ users = Table(
     Column('last_name', String)
 )
 ```
-Помимо сторонних библиотек (например, [alembic](https://pypi.org/project/alembic/)) для миграции схемы в базу можно также применить встроенную функцию `create_all()`. Для ее работы необходимо объявить `engine`. Это действие будет рассмотрено ниже в пункте **Создание engine**.
+Сразу после объвяление схемы, для корректной работы API необходимо выполнить миграции. Это можно сделать с помощью сторонних библиотек (например, [alembic](https://pypi.org/project/alembic/)) или используя встроенную функцию `engine.create_all()`. 
 ```
 import gino
 from gino.schema import GinoSchemaVisitor
@@ -44,7 +46,6 @@ async def main():
     engine = await gino.create_engine('postgresql://...')
     await GinoSchemaVisitor(metadata).create_all(engine)
 ```
-Синтаксис и принципы работы взяты из [SQLAlchemy core](https://docs.sqlalchemy.org/en/13/core/metadata.html).
 
 ### Gino core
 
@@ -66,11 +67,12 @@ users = db.Table(
     db.Column('last_name', db.String),
 )
 ```
-Миграции, как и в предыдущем случае можно провести с помощью [alembic](https://pypi.org/project/alembic/) или встроенной функции `create_all()`:
+Миграции, как и в предыдущем случае можно провести с помощью [alembic](https://pypi.org/project/alembic/) или встроенной функции `engine.create_all()`:
 ```
 async with db.with_bind('postgresql://localhost/gino'):
     await db.gino.create_all()
 ```
+
 ### Gino ORM
 
 Это классический способ задания схемы БД для многих web framework'ов.
@@ -131,7 +133,7 @@ target_metadata = db
 
 # Engine
 
-ля создания **engine** Gino предоставляет метод `gino.create_engine()`. Он полностью повторяет поведение аналогичного метода в SQLAchemy за исключением установленного по умолчанию параметра `strategy = 'gino'.
+Для создания **engine** Gino предоставляет метод `gino.create_engine()`. Он полностью повторяет поведение аналогичного метода в SQLAchemy за исключением установленного по умолчанию параметра `strategy = 'gino'.
 ```
 import gino
 
@@ -216,7 +218,6 @@ async def get_car(request):
 
 
 # Транзакции
-
 
 Никогда нельзя точно сказать, сколько времени займет await, при чем слишком долгое удержание транзакций может привести к серьезным сбоям в работе приложения. Gino решает эту проблему, путем обеспечения явного управления транзакциями.
 
