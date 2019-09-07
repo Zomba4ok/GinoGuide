@@ -8,7 +8,7 @@ Gino позволяет писать и выполнять низкоуровы�
 
 # Установка
 
-Установка самого Ginoпроизводится с помощью файлового менеджера pip.
+Установка самого Gino производится с помощью файлового менеджера pip.
 ```
 pip install gino
 ```
@@ -334,8 +334,47 @@ async def get_car(request):
 
 ![image](https://user-images.githubusercontent.com/49648818/64427000-c2aa2080-d0b8-11e9-9d4c-bdea9a0d04c5.png)
 
-# Примеры работы с Gino
 
 
 ***P.S.
 Как говорилось ранее, Gino написано на основе SQLAlchemy и большУю часть функционала наследует из данной ORM. Не забывайте об этом при работе с Gino***
+
+
+# Примеры работы с Gino
+
+### Gino
+
+```
+@app.route('/')
+async def get_car(request):
+    start_time = time.time()
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
+    async with engine.acquire() as conn:
+        cars = await conn.all('SELECT * FROM cars')
+        for i in range(1000):
+            await conn.status('INSERT INTO cars (car_brand, body_type, owner) VALUES (\'jaguar\', \'sedan\', 2)')
+    end_time = time.time()
+    return html(str(end_time - start_time) + ' seconds')
+```
+
+![image](https://user-images.githubusercontent.com/49648818/64471790-6c8fb880-d15e-11e9-9f0e-71e633eba552.png)
+
+### Django
+
+```
+def testView(request):
+    start_time = time.time()
+    cars = Car.objects.all()
+    new_car = Car()
+    new_car.body_type = 'sedan'
+    new_car.car_brand = 'jaguar'
+    new_car.owner = User.objects.get(id=2)
+    for i in range(1000):
+        new_car.save()
+    end_time = time.time()
+    return HttpResponse(str(end_time - start_time) + ' seconds')
+```
+
+![image](https://user-images.githubusercontent.com/49648818/64471807-8c26e100-d15e-11e9-9d14-abec0ba0e75f.png)
+
+
