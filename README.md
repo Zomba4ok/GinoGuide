@@ -277,8 +277,6 @@ async def get_car(request):
 
 ![6](https://user-images.githubusercontent.com/49648818/64342317-ec990f80-cff2-11e9-97c8-b2e82ee8d262.png)
 
-Использование model_loader не ускоряет работы API, но делает код более понятным и удобным, за счет обращения к данным через свойства объектов.
-
 ### Создание загрузчиков
 
 **Model loader** далеко не единственный загрузчик, предоставляемый Gino. Существую и другие загрузчики изменяющие вывод строк БД. Они подключаются следующим образом:
@@ -338,24 +336,41 @@ async def get_car(request):
 # Примеры работы с Gino
 
 ```
-async def query():
+async def get_cars_list_with_delay(delay):
+    await asyncio.sleep(delay)
     engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
     async with engine.acquire() as conn:
-        objects = await conn.all('SELECT * FROM cars')
-    return objects
-    
-    
+        cars = await conn.all('SELECT * FROM cars')
+    return cars
+
+
+async def get_car_owner_with_delay(delay, car):
+    await asyncio.sleep(delay)
+    query = db.select([User]).where(User.id == car.owner).execution_options(loader=User)
+    owner = await query.gino.first()
+    return owner
+
+
 @app.route('/')
 async def get_car(request):
+    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
+    async with engine.acquire() as conn:
+        car = await conn.first('SELECT * FROM cars where car_brand = \'ferrari\'')
+
     start_time = time.time()
-    tasks = [query() for i in range(1, 5)]
-    await asyncio.wait(tasks)
+    tasks = [get_cars_list_with_delay(3), get_car_owner_with_delay(2, car)]
+    done, pending = await asyncio.wait(tasks)
     end_time = time.time()
-    return html(end_time - start_time)
+
+    time_delta = end_time - start_time
+    for item in done:
+        if not type(item.result()) is list:
+            owner = item.result()
+    output = 'Car owner is {}. Query duration is {}'.format(owner.first_name + ' ' + owner.last_name, time_delta)
+    return html(output)
 ```
 
-![image](https://user-images.githubusercontent.com/49648818/64472239-e2e2e980-d163-11e9-88fd-da037e50bf0e.png)
-
+![image](https://user-images.githubusercontent.com/49648818/64528608-976e3e00-d311-11e9-81ef-df448bc570c0.png)
 
 
 
