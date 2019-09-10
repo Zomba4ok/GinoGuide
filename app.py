@@ -39,11 +39,9 @@ class Test(db.Model):
     name = db.Column(db.String())
 
 
-async def get_cars_list_with_delay(delay):
+async def get_cars_list_with_delay(delay, conn):
     await asyncio.sleep(delay)
-    engine = await gino.create_engine('postgres://postgres:admin@localhost/postgres')
-    async with engine.acquire() as conn:
-        cars = await conn.all('SELECT * FROM cars')
+    cars = await conn.all('SELECT * FROM cars')
     return cars
 
 
@@ -60,10 +58,10 @@ async def get_car(request):
     async with engine.acquire() as conn:
         car = await conn.first('SELECT * FROM cars where car_brand = \'ferrari\'')
 
-    start_time = time.time()
-    tasks = [get_cars_list_with_delay(3), get_car_owner_with_delay(2, car)]
-    done, pending = await asyncio.wait(tasks)
-    end_time = time.time()
+        start_time = time.time()
+        tasks = [get_cars_list_with_delay(3, conn), get_car_owner_with_delay(2, car)]
+        done, pending = await asyncio.wait(tasks)
+        end_time = time.time()
 
     time_delta = end_time - start_time
     for item in done:
